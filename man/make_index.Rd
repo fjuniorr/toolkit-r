@@ -2,14 +2,20 @@
 % Please edit documentation in R/make_index.R
 \name{make_index}
 \alias{make_index}
-\title{Title}
+\title{Cria vetor de datas}
 \usage{
 make_index(start, h, x, end, class = c("yearmon", "Date"))
 }
 \arguments{
-\item{param1}{description}
+\item{start}{data de inicio no formato YYYY-MM}
 
-\item{param1}{description}
+\item{h}{numero para determinar tamanho do vetor}
+
+\item{x}{objeto para determinar tamanho do vetor}
+
+\item{end}{data final no formato YYYY-MM}
+
+\item{class}{classe de retorno do vetor}
 }
 \description{
 Description
@@ -18,8 +24,6 @@ Description
 Description
 }
 \details{
-Detais
-Detais
-Detais
+Somente h, x ou end devem ser especificados
 }
 

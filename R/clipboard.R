@@ -20,3 +20,11 @@ copia <- function(x) {
 cola <- function() {
   read.table("clipboard", sep="\t", header = TRUE, dec = ",")
 }
+
+#' @export
+w <- function(x) {
+  obj <- deparse(substitute(x))
+  file <- paste0(obj, ".csv")
+  path <- file.path(getwd(), file)
+  write.csv2(x, path, row.names = FALSE)
+}

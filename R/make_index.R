@@ -1,15 +1,16 @@
-#' Title
+#' Cria vetor de datas
 #'
 #' Description
 #' Description
 #' Description
 #' Description
 #'
-#' @param param1 description
-#' @param param1 description
-#' @details Detais
-#' Detais
-#' Detais
+#' @param start data de inicio no formato YYYY-MM
+#' @param h numero para determinar tamanho do vetor
+#' @param x objeto para determinar tamanho do vetor
+#' @param end data final no formato YYYY-MM
+#' @param class classe de retorno do vetor
+#' @details Somente h, x ou end devem ser especificados
 
 #' @export
 make_index <- function(start, h, x, end, class = c("yearmon", "Date")) {
@@ -62,4 +63,20 @@ make_index <- function(start, h, x, end, class = c("yearmon", "Date")) {
     Date = return(index)
   )
 
+}
+
+#' Cria datas (YYYY-MM-DD) a partir de anos e meses
+#'
+#' Description
+#' Description
+#' Description
+#' Description
+#'
+#' @param x coluna ano no formato YYYY
+#' @param y coluna mes no formato MM
+#' @details O dia inserido será sempre 1
+
+#' @export
+make_date <- function(x, y) {
+  paste(x, formatC(y, width = 2, flag = "0"), "01", sep = "-")
 }
