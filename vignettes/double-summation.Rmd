@@ -1,0 +1,100 @@
+---
+title: "Double Summation, For Loops and Matrix Representation"
+author: "Vignette Author"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+# Introduction
+
+It's common specially when dealing with variances and covariances of sums of random variables to have to deal with double summation. The most general case is that of the covariance of two linear combinations of random variables such as
+
+$$
+Cov(\sum_{i=1}^na_iX_i, \sum_{j=1}^mb_jY_j) \qquad (1)
+$$
+
+Note that it is not necessarily the case that $n=m$ in $(1)$. In that case, the correct formula is
+
+$$
+Cov(\sum_{i=1}^na_iX_i, \sum_{j=1}^mb_jY_j) = \sum_{i=1}^n\sum_{j=1}^{m}a_ib_jCov(X_i, Y_j) \qquad(2)
+$$
+
+Here is a simulation to show that this formula works
+
+```{r}
+# simulate data
+smpl <- 30
+
+n <- 4
+a <- sample(1:20, n)
+X <- lapply(rep(smpl, n), function(x) {rnorm(x)})
+
+m <- 3
+b <- sample(1:20, m)
+Y <- lapply(rep(smpl, m), function(y) {rnorm(y)})
+
+# left-hand side calculation
+aX <- 0
+for(i in 1:n) {
+  aX <- aX + a[i]*X[[i]]
+}
+
+bY <- 0
+for(j in 1:m) {
+  bY <- bY + b[j]*Y[[j]]
+}
+
+lhs_cov <- cov(aX, bY)
+
+# right hand side calculation
+rhs_cov <- 0
+
+for(i in 1:n) {
+  for(j in 1:m) {
+    rhs_cov <- rhs_cov + (a[i]*b[j]*cov(X[[i]], Y[[j]]))
+  }
+}
+
+# should be equal
+c(lhs_cov, rhs_cov)
+```
+
+In the next section we will take a closer look in the intuition of why (2) works.
+
+# Example
+
+To fix ideas, let's work out a 2x2 case, that is, we want the covariance of
+
+$$
+\begin{aligned}
+Cov(\sum_{i=1}^2a_iX_i, \sum_{j=1}^2b_jY_j) &= \sum_{i=1}^2\sum_{j=1}^{2}a_ib_jCov(X_i, Y_j) \\
+Cov(a_1X_1 + a_2X_2, b_1Y_1 + b_2Y_2) &= a_1b_1Cov(X_1, Y_1) + a_1b_2Cov(X_1, Y_2) \\
+&+ a_2b_1Cov(X_2, Y_1) + a_2b_2Cov(X_2, Y_1)
+\end{aligned}
+$$
+Let's expand the LHS
+
+$$
+\begin{aligned}
+&= E\Big[\big((a_1X_1 + a_2X_2) - E[a_1X_1 + a_2X_2]\big)\big((b_1Y_1 + b_2Y_2) - E[b_1Y_1 + b_2Y_2]\big)\Big]\\
+&= E\Big[ \big( a_1X_1 - a_1EX_1 + a_2X_2 - a_2EX_2\big) \big(  \big) \Big]
+\end{aligned}
+$$
+
+
+# Variances
+
+Now let's take a closer look when we are dealing with variances, that is, $X_i = Y_i$ for all $i$ and $n=m$. If $a_i \neq b_i$, then we have
+
+$$
+Cov(\sum_{i=1}^na_iX_i, \sum_{i=1}^nb_iX_i) = \sum_{i=1}^{n}\sum_{j=1}^na_ib_jCov(X_i, X_j) = \sum_{i=1}^na_ib_iVar(X_i) + 2\sum_{i < j}\sum a_ib_j Cov(X_i, X_j)
+$$
+I think this is wrong because the matrix is not symmetric
+
+# References
+
+http://www.math.uah.edu/stat/expect/Covariance.html
