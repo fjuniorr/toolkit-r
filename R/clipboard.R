@@ -22,9 +22,13 @@ cola <- function() {
 }
 
 #' @export
-w <- function(x) {
-  obj <- deparse(substitute(x))
-  file <- paste0(obj, ".csv")
+w <- function(x, name = NULL) {
+  if(is.null(name)) {
+    obj <- deparse(substitute(x))
+  } else {
+    obj <- name
+  }
+  file <- paste0(obj, ".xlsx")
   path <- file.path(getwd(), file)
-  write.csv2(x, path, row.names = FALSE)
+  writexl::write_xlsx(x, path)
 }
