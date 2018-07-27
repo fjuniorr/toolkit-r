@@ -13,7 +13,7 @@
 #' @details Somente h, x ou end devem ser especificados
 
 #' @export
-make_index <- function(start, h, x, end, class = c("yearmon", "Date")) {
+make_index <- function(start, h, x, end, class = c("date", "yearmon", "character")) {
 
   stopifnot(!missing(start), is.character(start), nchar(start) == 7, !missing(x) | !missing(end) | !missing(h))
 
@@ -58,11 +58,13 @@ make_index <- function(start, h, x, end, class = c("yearmon", "Date")) {
     index <- end_index
   }
 
-  switch (class,
-    yearmon = return(zoo::as.yearmon(substr(index, 1, 7))),
-    Date = return(index)
+  ret <- switch (class,
+                 date = as.Date(index),
+                 yearmon = zoo::as.yearmon(index),
+                 character = substr(index, 1, 7)
   )
 
+  ret
 }
 
 #' Cria datas (YYYY-MM-DD) a partir de anos e meses
@@ -77,6 +79,17 @@ make_index <- function(start, h, x, end, class = c("yearmon", "Date")) {
 #' @details O dia inserido será sempre 1
 
 #' @export
-make_date <- function(x, y) {
-  paste(x, formatC(y, width = 2, flag = "0"), "01", sep = "-")
+make_date <- function(x, y, class = c("date", "yearmon", "character")) {
+
+  class <- match.arg(class)
+
+  index <- paste(x, formatC(y, width = 2, flag = "0"), "01", sep = "-")
+
+  ret <- switch (class,
+                 date = as.Date(index),
+                 yearmon = zoo::as.yearmon(index),
+                 character = substr(index, 1, 7)
+  )
+
+  ret
 }

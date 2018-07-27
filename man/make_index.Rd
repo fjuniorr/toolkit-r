@@ -4,7 +4,7 @@
 \alias{make_index}
 \title{Cria vetor de datas}
 \usage{
-make_index(start, h, x, end, class = c("yearmon", "Date"))
+make_index(start, h, x, end, class = c("date", "yearmon", "character"))
 }
 \arguments{
 \item{start}{data de inicio no formato YYYY-MM}
@@ -26,4 +26,3 @@ Description
 \details{
 Somente h, x ou end devem ser especificados
 }
-

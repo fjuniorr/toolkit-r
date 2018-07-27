@@ -4,7 +4,7 @@
 \alias{make_date}
 \title{Cria datas (YYYY-MM-DD) a partir de anos e meses}
 \usage{
-make_date(x, y)
+make_date(x, y, class = c("date", "yearmon", "character"))
 }
 \arguments{
 \item{x}{coluna ano no formato YYYY}
@@ -20,4 +20,3 @@ Description
 \details{
 O dia inserido será sempre 1
 }
-

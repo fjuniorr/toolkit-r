@@ -11,8 +11,10 @@ Imports:
     formattable,
     zoo,
     devtools,
+    ggplot2,
+    data.table,
     utils
-RoxygenNote: 5.0.1
+RoxygenNote: 6.0.1
 Suggests: knitr,
     rmarkdown
 VignetteBuilder: knitr

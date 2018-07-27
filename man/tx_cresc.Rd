@@ -22,4 +22,3 @@ Detais
 Detais
 Detais
 }
-
