@@ -1,35 +1,91 @@
+
+
+
+#' @export
+xmr <- function(x, sampling = NULL, trend = FALSE, lock = FALSE) {
+
+  if(is.null(sampling)) {
+    sampling <- list(seq_along(x))
+  } else {
+    stopifnot(identical(seq_along(x), unlist(sampling))) # checks if sampling period is correctly specified
+    }
+
+  if(length(trend) > 1) {
+    stopifnot(identical(length(sampling), length(trend))) # checks that each sample has a trend value
+  }
+
+  if(length(trend) == 1 & !is.null(sampling)) { # if sampling is NULL I don?t need to replicate the trend vector because xmr_data will ba called only once
+    trend <- rep(trend, times = length(sampling)) # this make it easier to call xmr_data with approppriate trend argument
+  }
+
+  dt <- data.table::as.data.table(do.call("rbind", lapply(seq_along(sampling), function(i, x, sampling, trend) {
+          dt <- xmr_data(x[sampling[[i]]], trend[i])
+          dt$sampling <- paste0("sample", i)
+          dt
+    }, x = x, sampling = sampling, trend = trend)))
+
+  dt[, trend := seq_len(nrow(dt))]
+
+  if(lock == TRUE) {
+    stopifnot(length(sampling) > 1) # in order to lock the limits we need at least two samples
+    locked_obs <- sampling[[length(sampling)]]
+    pre_locked_obs <- sampling[[length(sampling) - 1]]
+
+    dt[locked_obs, mrBar := dt[pre_locked_obs, unique(mrBar)]]
+    dt[locked_obs, URL := dt[pre_locked_obs, unique(URL)]]
+    dt[locked_obs, xBar := dt[pre_locked_obs, unique(xBar)]]
+    dt[locked_obs, UNPL := dt[pre_locked_obs, unique(UNPL)]]
+    dt[locked_obs, LNPL := dt[pre_locked_obs, unique(LNPL)]]
+
+
+    dt[head(locked_obs, 1), mr := abs(dt[head(locked_obs, 1), x] - dt[last(pre_locked_obs, 1), x])]
+    dt[locked_obs, locked := TRUE]
+    dt[-locked_obs, locked := FALSE]
+  }
+
+  dt[, mrCritical := (mr > URL)]
+  dt[, xCritical := (x > UNPL | x < LNPL)]
+
+
+  dt[]
+}
+
 #' XmR Charts
 #'
 #' Graficos de Controle
 #' @import ggplot2
 #' @import data.table
 #' @export
-xmr_plot <- function(x, trend = FALSE) {
+xmr_plot <- function(data) {
 
-  dt <- xmr_data(x, trend)
-
-  p1 <- ggplot(data = dt, aes(x = trend, y = x)) + geom_point(aes(color = xCritical), size = 3) + geom_line() +
-    geom_abline(intercept = intercept(dt$xBar), slope = slope(dt$xBar)) +
-    geom_abline(intercept = intercept(dt$UNPL), slope = slope(dt$UNPL), color = "red") +
-    geom_abline(intercept = intercept(dt$LNPL), slope = slope(dt$LNPL), color = "red") +
+  p1 <- ggplot(data = data, aes(x = trend, y = x)) +
+    geom_point(aes(color = xCritical), size = 3) +
+    geom_line() +
+    geom_line(aes(x = trend, y = xBar)) +
+    geom_line(aes(x = trend, y = UNPL), color = "red") +
+    geom_line(aes(x = trend, y = LNPL), color = "red") +
     theme_bw() +
     scale_color_manual(values = c("black", "red"), guide = FALSE) +
     ylab("Individual Values (X)")
 
 
-  p2 <- ggplot(data = dt, aes(trend, mr)) + geom_point(na.rm = TRUE) + geom_line(na.rm = TRUE) +
-    geom_hline(yintercept = dt$mrBar) +
-    geom_hline(yintercept = dt$URL, color = "red") +
+  p2 <- ggplot(data = data, aes(trend, mr)) +
+    geom_point(aes(color = mrCritical), size = 3, na.rm = TRUE) +
+    geom_line(na.rm = TRUE) +
+    geom_line(aes(x = trend, y = mrBar)) +
+    geom_line(aes(x = trend, y = URL), color = "red") +
     ylab("Moving Ranges (mR)") +
-    theme_bw()
+    theme_bw() +
+    scale_color_manual(values = c("black", "red"), guide = FALSE)
 
   multiplot(p1, p2, cols = 1)
 
-  invisible(dt)
+  grid.arrange(p1, p2, nrow = 2)
 
 }
 
-xmr_data <- function(x, trend = FALSE, labels = NULL) {
+#' @export
+xmr_data <- function(x, trend) {
 
   if(is.data.frame(x)) {
     stopifnot(length(x) == 1)
@@ -42,38 +98,27 @@ xmr_data <- function(x, trend = FALSE, labels = NULL) {
 
   dt <- data.table::data.table(trend = 1:length(x))
   dt[, x := x]
+
+  # moving range (mR) data
+  dt[, mr := abs((x - data.table::shift(x, type = "lag")))]
+  dt[, mrBar := mean(mr, na.rm = TRUE)]
+  dt[, URL := 3.267 * mrBar]
+
+
+  # individual (X) data
   if(trend) {
     dt[, xBar := fitted(lm(x ~ trend))]
   } else {
     dt[, xBar := mean(x, na.rm = TRUE)]
   }
-  dt[, mr := abs((x - data.table::shift(x, type = "lag")))]
-  dt[, mrBar := mean(mr, na.rm = TRUE)]
-  dt[, URL := 3.267 * mrBar]
+
   dt[, UNPL := xBar + (2.66 * mean(mr, na.rm = TRUE))]
   dt[, LNPL := xBar - (2.66 * mean(mr, na.rm = TRUE))]
-  dt[, xCritical := (x > UNPL | x < LNPL)]
-  dt[, mrCritical := (mr > URL)]
 
-  dt
+
+  dt[]
 }
 
-
-slope <- function(x) {
-  stopifnot(is.atomic(x), is.numeric(x))
-  trend <- 1:length(x)
-  fit <- lm(x ~ trend)
-  slope <- unname(coef(fit)["trend"])
-  slope
-}
-
-intercept <- function(x) {
-  stopifnot(is.atomic(x), is.numeric(x))
-  trend <- 1:length(x)
-  fit <- lm(x ~ trend)
-  slope <- unname(coef(fit)["(Intercept)"])
-  slope
-}
 
 #' Multiple plot function
 #'

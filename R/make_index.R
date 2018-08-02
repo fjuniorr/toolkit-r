@@ -1,3 +1,19 @@
+#' @export
+make_index_dt <- function(...) {
+  index <- make_index(...)
+
+  ret <- data.table(
+             DATE = index,
+             ANO = as.numeric(substr(index, 1, 4)),
+             MES_COD = as.numeric(substr(index, 6, 7))
+  )
+
+  ret[, MES := make_date(ANO, MES_COD, class = "character")]
+
+  ret[]
+}
+
+
 #' Cria vetor de datas
 #'
 #' Description

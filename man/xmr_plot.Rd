@@ -4,7 +4,7 @@
 \alias{xmr_plot}
 \title{XmR Charts}
 \usage{
-xmr_plot(x, trend = FALSE)
+xmr_plot(data)
 }
 \description{
 Graficos de Controle
