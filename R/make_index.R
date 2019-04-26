@@ -1,3 +1,4 @@
+#' Cria data table com colunas DATE, ANO e MES_COD
 #' @export
 make_index_dt <- function(...) {
   index <- make_index(...)
@@ -93,7 +94,6 @@ make_index <- function(start, h, x, end, class = c("date", "yearmon", "character
 #' @param x coluna ano no formato YYYY
 #' @param y coluna mes no formato MM
 #' @details O dia inserido será sempre 1
-
 #' @export
 make_date <- function(x, y, class = c("date", "yearmon", "character")) {
 

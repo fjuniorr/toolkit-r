@@ -18,36 +18,52 @@ xmr <- function(x, sampling = NULL, trend = FALSE, lock = FALSE) {
     trend <- rep(trend, times = length(sampling)) # this make it easier to call xmr_data with approppriate trend argument
   }
 
-  dt <- data.table::as.data.table(do.call("rbind", lapply(seq_along(sampling), function(i, x, sampling, trend) {
-          dt <- xmr_data(x[sampling[[i]]], trend[i])
-          dt$sampling <- paste0("sample", i)
-          dt
-    }, x = x, sampling = sampling, trend = trend)))
+
+  samples <- lapply(seq_along(sampling), function(i, x, sampling, trend) {
+    ls <- xmr_data(x[sampling[[i]]], trend[i])
+    ls$data$sampling <- paste0("sample", i)
+    ls
+  }, x = x, sampling = sampling, trend = trend)
+
+
+  dt <- data.table::as.data.table(do.call("rbind", purrr::map(samples, "data")))
 
   dt[, trend := seq_len(nrow(dt))]
+  dt[, locked := FALSE]
 
   if(lock == TRUE) {
     stopifnot(length(sampling) > 1) # in order to lock the limits we need at least two samples
     locked_obs <- sampling[[length(sampling)]]
-    pre_locked_obs <- sampling[[length(sampling) - 1]]
+
+
+    pre_locked_obs_index <- length(sampling) - 1
+    pre_locked_obs <- sampling[[pre_locked_obs_index]]
 
     dt[locked_obs, mrBar := dt[pre_locked_obs, unique(mrBar)]]
     dt[locked_obs, URL := dt[pre_locked_obs, unique(URL)]]
-    dt[locked_obs, xBar := dt[pre_locked_obs, unique(xBar)]]
-    dt[locked_obs, UNPL := dt[pre_locked_obs, unique(UNPL)]]
-    dt[locked_obs, LNPL := dt[pre_locked_obs, unique(LNPL)]]
 
+    if(trend[pre_locked_obs_index]) {
+      trend_locked_obs <- (locked_obs - head(pre_locked_obs, 1)) + 1
+      df <- data.frame(trend = trend_locked_obs)
+    } else {
+      df <- data.frame(trend = rep(TRUE, length(locked_obs)))
+    }
+
+
+    # suppress warning prediction from a rank-deficient fit may be misleading
+    dt[locked_obs, xBar := suppressWarnings(predict(samples[[pre_locked_obs_index]]$fit, newdata = df))]
 
     dt[head(locked_obs, 1), mr := abs(dt[head(locked_obs, 1), x] - dt[last(pre_locked_obs, 1), x])]
     dt[locked_obs, locked := TRUE]
-    dt[-locked_obs, locked := FALSE]
   }
 
+  dt[, UNPL := xBar + (2.66 * mrBar)]
+  dt[, LNPL := xBar - (2.66 * mrBar)]
   dt[, mrCritical := (mr > URL)]
   dt[, xCritical := (x > UNPL | x < LNPL)]
 
 
-  dt[]
+  dt[, .(trend, x, mr, mrBar, URL, xBar, UNPL, LNPL, mrCritical, xCritical, sampling, locked)]
 }
 
 #' XmR Charts
@@ -78,26 +94,27 @@ xmr_plot <- function(data) {
     theme_bw() +
     scale_color_manual(values = c("black", "red"), guide = FALSE)
 
-  multiplot(p1, p2, cols = 1)
-
-  grid.arrange(p1, p2, nrow = 2)
+  gridExtra::grid.arrange(p1, p2, nrow = 2)
 
 }
 
 #' @export
 xmr_data <- function(x, trend) {
 
-  if(is.data.frame(x)) {
-    stopifnot(length(x) == 1)
-    x <- as.numeric(x[, 1])
-  }
-
   stopifnot(is.atomic(x), is.numeric(x), is.logical(trend))
 
-  names(x) <- "x"
+  dt <- data.table::data.table(x)
 
-  dt <- data.table::data.table(trend = 1:length(x))
-  dt[, x := x]
+  if(trend) {
+    dt[, trend := seq_along(x)]
+  } else {
+    dt[, trend := rep(TRUE, length(x))] # we can use a dummy regressor to estimate xBar
+  }
+
+  # individual (X) data
+  fit <- lm(x ~ trend,data = dt)
+  dt[, xBar := suppressWarnings(predict(fit, newdata = data.frame(trend)))]
+
 
   # moving range (mR) data
   dt[, mr := abs((x - data.table::shift(x, type = "lag")))]
@@ -105,18 +122,7 @@ xmr_data <- function(x, trend) {
   dt[, URL := 3.267 * mrBar]
 
 
-  # individual (X) data
-  if(trend) {
-    dt[, xBar := fitted(lm(x ~ trend))]
-  } else {
-    dt[, xBar := mean(x, na.rm = TRUE)]
-  }
-
-  dt[, UNPL := xBar + (2.66 * mean(mr, na.rm = TRUE))]
-  dt[, LNPL := xBar - (2.66 * mean(mr, na.rm = TRUE))]
-
-
-  dt[]
+  list(data = dt[, .(x, xBar, mr, mrBar, URL)], fit = fit)
 }
 
 

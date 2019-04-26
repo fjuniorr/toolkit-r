@@ -11,10 +11,14 @@ Imports:
     formattable,
     zoo,
     devtools,
+    janitor,
     ggplot2,
     data.table,
+    gridExtra,
+    glue,
+    readxl,
     utils
-RoxygenNote: 6.0.1
+RoxygenNote: 6.1.0
 Suggests: knitr,
     rmarkdown
 VignetteBuilder: knitr
