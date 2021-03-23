@@ -18,7 +18,8 @@ Imports:
     glue,
     readxl,
     utils
-RoxygenNote: 6.1.0
+RoxygenNote: 7.1.0
 Suggests: knitr,
     rmarkdown
 VignetteBuilder: knitr
+Encoding: UTF-8
