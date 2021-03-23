@@ -8,8 +8,6 @@ tx_cresc(x)
 }
 \arguments{
 \item{param1}{description}
-
-\item{param1}{description}
 }
 \description{
 Description

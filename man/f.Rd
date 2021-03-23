@@ -8,8 +8,6 @@ f(x, type = c("ORIGINAL", "\%", "k", "M", "B"))
 }
 \arguments{
 \item{param1}{description}
-
-\item{param1}{description}
 }
 \description{
 Description

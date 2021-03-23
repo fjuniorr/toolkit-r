@@ -8,8 +8,6 @@ install_relatorios(ref = "master", password)
 }
 \arguments{
 \item{param1}{description}
-
-\item{param1}{description}
 }
 \description{
 Description
