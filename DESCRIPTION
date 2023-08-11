@@ -1,11 +1,9 @@
-Package: misc
+Package: toolkit
 Type: Package
-Title: What the Package Does (Title Case)
-Version: 0.1.0.9002
-Author: Who wrote it
-Maintainer: Who to complain to <yourfault@somewhere.net>
-Description: More about what it does (maybe more than one line)
-License: What license is it under?
+Title: Miscellaneous personal package for workflow productivity
+Version: 0.1.0
+Author: Francisco Alves
+License: MIT
 LazyData: TRUE
 Imports:
     formattable,
@@ -18,7 +16,7 @@ Imports:
     glue,
     readxl,
     utils
-RoxygenNote: 7.1.0
+RoxygenNote: 7.2.3
 Suggests: 
     knitr,
     rmarkdown,
