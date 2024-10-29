@@ -32,3 +32,8 @@ w <- function(x, name = NULL) {
   path <- file.path(getwd(), file)
   writexl::write_xlsx(x, path)
 }
+
+#' @export
+cp <- function(dt) {
+  knitr::kable(dt, format = "markdown") |> clipr::write_clip()  
+}

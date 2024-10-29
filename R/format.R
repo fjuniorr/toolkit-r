@@ -26,10 +26,18 @@ f <- function(x, type = c("ORIGINAL", "%", "k", "M", "B")) {
 
 #' @export
 pp <- function(dt) {
+  if(is.numeric(dt)) {
+    return(accounting(dt))
+  }
+
   result <- data.table::copy(dt)
   cols_to_format <- names(result)[sapply(result, is.numeric) & sapply(result, function(x) any(x >= 100000, na.rm = TRUE))]
 
   # format those columns
-  result[, (cols_to_format) := lapply(.SD, function(x) formattable::accounting(x, big.mark = ".", decimal.mark = ",")), .SDcols = cols_to_format]
+  result[, (cols_to_format) := lapply(.SD, accounting), .SDcols = cols_to_format]
   result[]
+}
+
+accounting <- function(x) {
+  formattable::accounting(x, big.mark = ".", decimal.mark = ",")
 }
